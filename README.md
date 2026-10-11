@@ -192,7 +192,7 @@ npx ccgather
 </tr>
 <tr><td align="center">📤</td><td>Submit Usage Data</td><td>Scan and submit Claude Code usage</td></tr>
 <tr><td align="center">🌐</td><td>Open Leaderboard</td><td>Check rankings in browser</td></tr>
-<tr><td align="center">⚙️</td><td>Settings</td><td>Re-authenticate or change account</td></tr>
+<tr><td align="center">⚙️</td><td>Settings</td><td>Re-authenticate or change account, turn autosubmit on or off</td></tr>
 </table>
 
 ### Scheduled Submit
@@ -209,29 +209,24 @@ Submits your usage without any prompt, so it can run from a scheduler. Log in on
 <tr><td align="center">1</td><td>Not logged in, no usage data, rate limited, or a network/server error</td></tr>
 </table>
 
-Claude Code keeps about 30 days of local data, so once a day is plenty:
+Claude Code keeps about 30 days of local data, so once a day is plenty. To run it every day, use [Autosubmit](#autosubmit) (`npx ccgather autosubmit on`). On a system Autosubmit does not support, schedule it yourself; for example with cron, every day at 21:00 (Node must be on cron's PATH):
 
 ```bash
-# cron (macOS/Linux), every day at 21:00 — Node must be on cron's PATH
 0 21 * * * npx --yes ccgather@latest submit >> ~/ccgather.log 2>&1
-
-# Windows Task Scheduler (run in Command Prompt), every day at 21:00; a console window shows while it runs
-schtasks /create /tn "CCgather submit" /sc daily /st 21:00 /tr "cmd /c npx --yes ccgather@latest submit >> \"%USERPROFILE%\ccgather.log\" 2>&1"
 ```
-
-Task Scheduler skips a run on battery power by default, and both schedulers skip a run while the machine is asleep or off, so pick a time the machine is usually awake and plugged in.
 
 ### Autosubmit
 
-Or let the CLI set up the daily job for you, using your operating system's own scheduler:
+Let the CLI set up the daily job for you, using your operating system's own scheduler:
 
 ```bash
-npx ccgather autosubmit          # turn it on, or update/repair it; add --time 21:30 to pick the time
-npx ccgather autosubmit status   # what the scheduler has, the last run and its result
-npx ccgather autosubmit off      # remove it
+npx ccgather autosubmit on             # turn it on, or update/repair it
+npx ccgather autosubmit status         # what the scheduler has, the last run and its result
+npx ccgather autosubmit off            # remove it
+npx ccgather autosubmit on --at 21:30  # pick the time yourself
 ```
 
-Without `--time` it picks a random time between 09:00 and 20:59, so not everyone submits at once. If the machine was off at that time, the job catches up later (except with the Linux cron fallback, which skips that day); a second run within 20 hours is skipped.
+Without `--at` it runs every day at the time you turned it on plus five minutes (turn it on at 14:17 and it runs at 14:22), in your local time. People turn it on at different moments, so not everyone submits at once, and your machine is usually awake at that time. Settings > Autosubmit in the menu does the same as `on` and `off`. If the machine was off at that time, the job catches up later (except with the Linux cron fallback, which skips that day); a second run within 20 hours is skipped.
 
 <table>
 <tr><th width="100">OS</th><th>What it creates</th><th>Log</th></tr>
@@ -240,7 +235,7 @@ Without `--time` it picks a random time between 09:00 and 20:59, so not everyone
 <tr><td>Linux</td><td>systemd user timer <code>ccgather-autosubmit.timer</code>, or a marked crontab line where systemd user sessions are not available</td><td><code>journalctl --user -u ccgather-autosubmit</code>, or <code>~/.local/state/ccgather/autosubmit.log</code> with cron</td></tr>
 </table>
 
-The job runs the ccgather version you set it up with (or your global install, if you ran that). To move it to a newer release, run `npx ccgather@latest autosubmit`. With `--auto-update` it runs `ccgather@latest` instead, so whatever release is newest that day runs with access to your token.
+The job runs the ccgather version you set it up with (or your global install, if you ran that). To move it to a newer release, run `npx ccgather@latest autosubmit on`. With `--auto-update` it runs `ccgather@latest` instead, so whatever release is newest that day runs with access to your token.
 
 - **macOS** may show a "Background Items Added" notification once.
 - **Linux (systemd)** runs the job only while you are signed in and catches up at your next login. To run it while signed out, run `loginctl enable-linger $USER` yourself.
